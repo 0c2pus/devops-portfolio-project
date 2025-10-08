@@ -3,7 +3,7 @@
 [![CI Pipeline Status](https://github.com/chest8r/devops-portfolio-project/actions/workflows/ci.yml/badge.svg)](https://github.com/chester/devops-portfolio-project/actions/workflows/ci.yml)
 [![Docker Image Version (Backend)](https://img.shields.io/docker/v/docker_mail/devops-portfolio-backend?label=backend&logo=docker)](https://hub.docker.com/r/docker_mail/devops-portfolio-backend)
 [![Docker Image Version (Frontend)](https://img.shields.io/docker/v/docker_mail/devops-portfolio-frontend?label=frontend&logo=docker)](https://hub.docker.com/r/docker_mail/devops-portfolio-frontend)
-[![GitHub license](https://img.shields.io/github/license/chest8r/devops-portfolio-project)](https://github.com/chest8r/devops-portfolio-project/blob/master/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/chest8r/devops-portfolio-project)](https://github.com/chest8r/devops-portfolio-project/blob/main/LICENSE)
 
 **Complete implementation of a DevOps pipeline for a web application using modern practices: CI/CD, Infrastructure as Code, Kubernetes, and GitOps, tailored for a local development environment.**
 
@@ -107,7 +107,7 @@ devops-portfolio-project/
 - [x] Created public GitHub repository
 - [x] Initialized folder structure with GitFlow workflow
 - [x] Added base application code (Node.js backend + React frontend)
-- [x] Configured `master` and `develop` branches
+- [x] Configured `main` and `develop` branches
 
 ### Stage 1: Manual VM Setup and Docker Deployment (Completed)
 - [x] VM Configuration: Ubuntu Server VM in UTM with bridged networking
@@ -233,7 +233,7 @@ helm install portfolio-app infrastructure/k8s/portfolio-app -n portfolio --creat
 
 ## GitOps Workflow
 1. Make changes in Git repository (values.yaml or templates)
-2. Commit and push to develop/master branch
+2. Commit and push to develop/main branch
 3. ArgoCD detects changes automatically (1-3 minutes)
 4. Application synchronizes to desired state
 5. Kubernetes updates running pods
@@ -296,8 +296,8 @@ All Docker images are built for both AMD64 (Intel/AMD) and ARM64 (Apple Silicon)
 <details>
 <summary>Workflow Triggers:</summary>
   
-- Push to master/develop: Full pipeline with DockerHub publishing
-- Pull Requests to master: Build, test, and scan without publishing
+- Push to main/develop: Full pipeline with DockerHub publishing
+- Pull Requests to main: Build, test, and scan without publishing
 - Manual dispatch: On-demand pipeline execution
 
 </details>
@@ -433,7 +433,7 @@ _All services running with health checks in Docker Compose_
 _GitHub Actions workflow run showing all jobs (Lint, Build/Test/Scan, Publish) with green checkmarks_
 
 ![DockerHub repositories](docs/images/stage-2/images.png)
-_DockerHub repositories showing published images with multiple tags (master, develop, SHA tags)_
+_DockerHub repositories showing published images with multiple tags (main, develop, SHA tags)_
 
 ![GitHub Security](docs/images/stage-2/code-scanning.png)
 _GitHub Security tab displaying Trivy scan results with vulnerability reports for both containers_
