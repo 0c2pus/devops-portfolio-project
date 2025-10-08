@@ -1,0 +1,82 @@
+replicaCount: 2
+
+imagePullSecrets: []
+
+backend:
+  image:
+    repository: cicero2/devops-portfolio-backend
+    tag: "develop"
+    pullPolicy: IfNotPresent
+  port: 8000
+  replicas: 3
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  livenessProbePath: /api/greeting
+  readinessProbePath: /api/greeting
+
+frontend:
+  image:
+    repository: cicero2/devops-portfolio-frontend
+    tag: "develop"
+    pullPolicy: IfNotPresent
+  containerPort: 3000
+  replicas: 3
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+nginx:
+  enabled: true
+  image:
+    repository: nginx
+    tag: "stable-alpine"
+    pullPolicy: IfNotPresent
+  containerPort: 80
+  service:
+    type: NodePort
+    nodePort: 30080
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+services:
+  frontend:
+    name: portfolio-app-portfolio-app-frontend
+    port: 80
+  backend:
+    name: portfolio-app-portfolio-app-backend
+    port: 8000
+
+serviceAccount:
+  create: true
+  name: ""
+
+ingress:
+  enabled: false
+  className: "nginx"
+  hosts:
+    - host: portfolio.local
+      paths:
+        - path: /
+          pathType: Prefix
+        - path: /api
+          pathType: Prefix
+  tls: [] # [{hosts: ["portfolio.local"], secretName: "tls-secret"}]
+
+nginxConfig: |-
+
+extraEnv: []

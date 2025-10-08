@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "portfolio-app.fullname" . }}-nginx
+  labels:
+    {{- include "portfolio-app.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.nginx.service.type | default "NodePort" }}
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+      {{- if and (eq .Values.nginx.service.type "NodePort") .Values.nginx.service.nodePort }}
+      nodePort: {{ .Values.nginx.service.nodePort }}
+      {{- end }}
+  selector:
+    app: {{ include "portfolio-app.name" . }}-nginx

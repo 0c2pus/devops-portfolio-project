@@ -1,0 +1,227 @@
+---
+- name: Setup Ubuntu VM for DevOps Portfolio Project
+  hosts: dev-server
+  become: true
+  gather_facts: true
+
+  vars:
+    project_dir: "{{ hostvars[inventory_hostname]['project_dir'] }}"
+    git_repo_url: "{{ hostvars[inventory_hostname]['git_repo_url'] }}"
+    git_branch: "{{ hostvars[inventory_hostname]['git_branch'] }}"
+    dockerhub_username: "{{ hostvars[inventory_hostname]['dockerhub_username'] }}"
+
+  tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+      tags: [system]
+
+    - name: Install required system packages
+      apt:
+        name: [ca-certificates, curl, gnupg, lsb-release]
+        state: present
+      tags: [system, docker]
+
+    - name: Create apt keyrings directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+      tags: [docker]
+
+    - name: Download Docker GPG key
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+        force: true
+      tags: [docker]
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        filename: docker
+      tags: [docker]
+
+    - name: Install Docker packages
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+      tags: [docker]
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+      tags: [docker]
+
+    - name: Reset SSH connection for group changes
+      meta: reset_connection
+      tags: [docker]
+
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: true
+      tags: [docker]
+
+    - name: Verify Docker installation
+      command: docker --version
+      register: docker_version
+      become: false
+      changed_when: false
+      tags: [docker, verify]
+
+    - name: Display Docker version
+      debug:
+        msg: "Docker version installed: {{ docker_version.stdout }}"
+      tags: [docker, verify]
+
+    - name: Install Git
+      apt:
+        name: git
+        state: present
+      tags: [git]
+
+    - name: Clean up old project directory
+      file:
+        path: "{{ project_dir }}"
+        state: absent
+      tags: [project]
+
+    - name: Create project directory
+      file:
+        path: "{{ project_dir }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+      tags: [project]
+
+    - name: Clone project repository
+      git:
+        repo: "{{ git_repo_url }}"
+        dest: "{{ project_dir }}"
+        version: "{{ git_branch }}"
+        force: true
+      become: false
+      tags: [project]
+
+    - name: Create environment file for Docker Compose
+      copy:
+        dest: "{{ project_dir }}/.env"
+        content: |
+          DOCKERHUB_USERNAME={{ dockerhub_username }}
+          IMAGE_TAG={{ git_branch }}
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+      tags: [project, env]
+
+    - name: Verify Docker Compose file exists
+      stat:
+        path: "{{ project_dir }}/docker-compose.prod.yml"
+      register: compose_file
+      tags: [deploy]
+
+    - name: Fail if Docker Compose file missing
+      fail:
+        msg: "docker-compose.prod.yml not found in {{ project_dir }}"
+      when: not compose_file.stat.exists
+      tags: [deploy]
+
+    - name: Stop existing containers (if any)
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_dir }}"
+        files: [docker-compose.prod.yml]
+        state: absent
+      become: false
+      ignore_errors: true
+      tags: [deploy]
+
+    - name: Pull latest Docker images
+      command: docker compose -f docker-compose.prod.yml pull
+      args:
+        chdir: "{{ project_dir }}"
+      become: false
+      register: pull_result
+      tags: [deploy]
+
+    - name: Display pull results
+      debug:
+        var: pull_result.stdout_lines
+      tags: [deploy]
+
+    - name: Deploy application with Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_dir }}"
+        files: [docker-compose.prod.yml]
+        state: present
+        wait: true
+        wait_timeout: 300
+      become: false
+      register: deploy_result
+      tags: [deploy]
+
+    - name: Wait for application to be healthy
+      command: docker compose -f docker-compose.prod.yml ps --format json
+      args:
+        chdir: "{{ project_dir }}"
+      become: false
+      register: health_check
+      retries: 12
+      delay: 15
+      until: "'unhealthy' not in health_check.stdout and 'starting' not in health_check.stdout"
+      tags: [deploy, verify]
+
+    - name: Display final container status
+      command: docker compose -f docker-compose.prod.yml ps
+      args:
+        chdir: "{{ project_dir }}"
+      become: false
+      register: final_status
+      tags: [deploy, verify]
+
+    - name: Show deployment results
+      debug:
+        var: final_status.stdout_lines
+      tags: [deploy, verify]
+
+    - name: Test backend API endpoint
+      uri:
+        url: "http://localhost/api/greeting"
+        method: GET
+        timeout: 10
+      register: backend_test
+      retries: 5
+      delay: 5
+      tags: [verify, test]
+
+    - name: Test frontend health endpoint
+      uri:
+        url: "http://localhost/health"
+        method: GET
+        timeout: 10
+      register: frontend_test
+      retries: 5
+      delay: 5
+      tags: [verify, test]
+
+    - name: Display test results
+      debug:
+        msg: 
+          - "Backend API Status: {{ backend_test.status }}"
+          - "Frontend Health Status: {{ frontend_test.status }}"
+          - "Application deployed successfully!"
+      tags: [verify, test]

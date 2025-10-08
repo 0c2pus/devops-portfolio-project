@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: portfolio-app-monitor
+  namespace: monitoring
+  labels:
+    app: portfolio-app
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: portfolio-app
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /health
+  namespaceSelector:
+    matchNames:
+    - portfolio

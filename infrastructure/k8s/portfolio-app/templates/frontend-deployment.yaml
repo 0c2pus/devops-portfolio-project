@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "portfolio-app.fullname" . }}-frontend
+  labels:
+    {{- include "portfolio-app.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ include "portfolio-app.name" . }}-frontend
+  template:
+    metadata:
+      labels:
+        app: {{ include "portfolio-app.name" . }}-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.frontend.containerPort }}
+              name: http
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10

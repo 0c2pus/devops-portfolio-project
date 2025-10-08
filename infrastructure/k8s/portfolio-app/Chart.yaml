@@ -1,0 +1,14 @@
+apiVersion: v2
+name: portfolio-app
+description: "Helm chart for portfolio Todo app (frontend + backend + nginx)"
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - portfolio
+  - todolist
+  - nodejs
+  - react
+maintainers:
+  - name: Pavlo
+    email: paul.antonenko.w@gmail.com
