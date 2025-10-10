@@ -1,20 +1,20 @@
-FROM node:20-alpine3.21 AS builder
+FROM --platform=linux/arm64 node:20-bullseye-slim AS builder
 
-RUN apk add --no-cache dumb-init curl
+RUN apt-get update && apt-get install -y build-essential python3 git curl && rm -rf /var/lib/apt/lists/*
 
-RUN addgroup -g 1001 -S nodejs && \
-  adduser -S nodejs -u 1001
+RUN addgroup --gid 1001 nodejs && adduser --uid 1001 --ingroup nodejs --disabled-password nodejs
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci
+
+RUN npm rebuild sqlite3 --build-from-source
 
 COPY . .
 
 RUN chown -R nodejs:nodejs /app
-
 USER nodejs
 
 EXPOSE 8000
@@ -22,4 +22,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node healthcheck.js || exit 1
 
-CMD ["dumb-init", "npm", "start"]
+CMD ["npm", "start"]
