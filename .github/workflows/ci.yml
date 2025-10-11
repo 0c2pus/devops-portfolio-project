@@ -46,6 +46,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Check CI file content (Diagnostic)
+        run: cat .github/workflows/ci.yml
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
@@ -68,7 +71,7 @@ jobs:
         run: |
           docker run -d --name test-backend -e NODE_ENV=production -e API_PORT=8000 -p 8000:8000 ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           sleep 10
-          timeout 30 bash -c 'until curl -f http://localhost:8000/api/greeting; do echo "Waiting for backend..."; sleep 2; done'
+          timeout 30 bash -c 'until curl -f -v http://localhost:8000/api/greeting; do echo "Waiting for backend..."; sleep 2; done'
           echo "Backend test successful"
           docker stop test-backend
           docker rm test-backend
@@ -80,7 +83,6 @@ jobs:
             -v ${{ github.workspace }}/trivy-reports:/reports \
             aquasecurity/trivy:latest image \
             --format sarif \
-            # Виводимо файл у змонтовану директорію
             --output /reports/backend-trivy-results.sarif \ 
             --severity CRITICAL,HIGH \
             ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
@@ -163,7 +165,7 @@ jobs:
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
-          platforms: linux/amd64,linux/arm64 
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
