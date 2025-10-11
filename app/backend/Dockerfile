@@ -8,7 +8,9 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --omit=dev && npm rebuild sqlite3 --build-from-source && npm cache clean --force
+RUN npm ci --omit=dev && \
+    npm rebuild sqlite3 --build-from-source && \
+    npm cache clean --force
 
 COPY . .
 
@@ -22,6 +24,7 @@ WORKDIR /app
 
 COPY --from=builder /app /app
 
+RUN npm ci --omit=dev && npm cache clean --force
 
 EXPOSE 8000
 
