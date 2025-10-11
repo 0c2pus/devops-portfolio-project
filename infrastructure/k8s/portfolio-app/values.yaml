@@ -4,7 +4,7 @@ imagePullSecrets: []
 
 backend:
   image:
-    repository: cicero2/devops-portfolio-backend
+    repository: ocu2pu5/devops-portfolio-backend
     tag: "develop"
     pullPolicy: IfNotPresent
   port: 8000
@@ -21,7 +21,7 @@ backend:
 
 frontend:
   image:
-    repository: cicero2/devops-portfolio-frontend
+    repository: ocu2pu5/devops-portfolio-frontend
     tag: "develop"
     pullPolicy: IfNotPresent
   containerPort: 3000
