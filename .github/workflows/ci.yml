@@ -109,12 +109,12 @@ jobs:
       - name: Test Frontend container
         run: |
           docker run -d --name test-frontend \
-            -p 3000:3000 \
+            -p 3000:80 \
             ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           
           sleep 10
           
-          timeout 30 bash -c 'until curl -f http://localhost:3000/health; do echo "Waiting for frontend..."; sleep 2; done'
+          timeout 30 bash -c 'until curl -f http://localhost:3000/; do echo "Waiting for frontend..."; sleep 2; done'
           
           echo "Frontend test successful"
           docker stop test-frontend
