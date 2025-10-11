@@ -74,7 +74,7 @@ jobs:
           docker rm test-backend
 
       - name: Run Trivy scan - Backend
-        uses: aquasecurity/trivy-action@v0.21.3
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           image-ref: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           format: 'sarif'
@@ -108,7 +108,7 @@ jobs:
           docker rm test-frontend
 
       - name: Run Trivy scan - Frontend
-        uses: aquasecurity/trivy-action@v0.21.3
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           image-ref: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           format: 'sarif'
