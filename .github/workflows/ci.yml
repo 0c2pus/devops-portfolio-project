@@ -55,13 +55,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Backend image (multi-platform, local)
+      - name: Build Backend image (local)
         uses: docker/build-push-action@v5
         with:
           context: app/backend
           push: false
           tags: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           load: true
 
       - name: Test Backend container
@@ -73,7 +73,7 @@ jobs:
           docker stop test-backend
           docker rm test-backend
 
-      - name: Run Trivy scan - Backend (via Docker)
+      - name: Run Trivy scan - Backend
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
             -v ${{ github.workspace }}:/workspace \
@@ -90,13 +90,13 @@ jobs:
           sarif_file: 'backend-trivy-results.sarif'
           category: 'backend-container'
 
-      - name: Build Frontend image (multi-platform, local)
+      - name: Build Frontend image (local)
         uses: docker/build-push-action@v5
         with:
           context: app/frontend
           push: false
           tags: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           load: true
 
       - name: Test Frontend container
@@ -108,7 +108,7 @@ jobs:
           docker stop test-frontend
           docker rm test-frontend
 
-      - name: Run Trivy scan - Frontend (via Docker)
+      - name: Run Trivy scan - Frontend
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
             -v ${{ github.workspace }}:/workspace \
@@ -153,7 +153,7 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and Push Backend image
+      - name: Build and Push Backend image (multi-platform)
         uses: docker/build-push-action@v5
         with:
           context: app/backend
@@ -174,7 +174,7 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and Push Frontend image
+      - name: Build and Push Frontend image (multi-platform)
         uses: docker/build-push-action@v5
         with:
           context: app/frontend
