@@ -1,9 +1,9 @@
 # GitOps & DevOps: From Code to Kubernetes on macOS
 
-[![CI Pipeline Status](https://github.com/chest8r/devops-portfolio-project/actions/workflows/ci.yml/badge.svg)](https://github.com/chest8r/devops-portfolio-project/actions/workflows/ci.yml)
+[![CI Pipeline Status](https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml/badge.svg)](https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml)
 [![Docker Image Version (Backend)](https://img.shields.io/docker/v/docker_mail/devops-portfolio-backend?label=backend&logo=docker)](https://hub.docker.com/r/docker_mail/devops-portfolio-backend)
 [![Docker Image Version (Frontend)](https://img.shields.io/docker/v/docker_mail/devops-portfolio-frontend?label=frontend&logo=docker)](https://hub.docker.com/r/docker_mail/devops-portfolio-frontend)
-[![GitHub license](https://img.shields.io/github/license/chest8r/devops-portfolio-project)](https://github.com/chest8r/devops-portfolio-project/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/0c2pus/devops-portfolio-project)](https://github.com/0c2pus/devops-portfolio-project/blob/main/LICENSE)
 
 **Complete implementation of a DevOps pipeline for a web application using modern practices: CI/CD, Infrastructure as Code, Kubernetes, and GitOps, tailored for a local development environment.**
 
@@ -380,7 +380,7 @@ Before you start, make sure that your computer has:
 <summary>1. Clone repository:</summary>
   
 ```bash
-   git clone https://github.com/chest8r/devops-portfolio-project.git
+   git clone https://github.com/0c2pus/devops-portfolio-project.git
    cd your-repository
 ```
 </details>
