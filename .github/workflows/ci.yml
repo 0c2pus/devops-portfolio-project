@@ -61,7 +61,7 @@ jobs:
           context: app/backend
           push: false
           tags: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          platforms: linux/amd64
+          platforms: linux/amd64 
           load: true
 
       - name: Test Backend container
@@ -75,11 +75,13 @@ jobs:
 
       - name: Run Trivy scan - Backend
         run: |
+          mkdir -p trivy-reports 
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-            -v ${{ github.workspace }}:/workspace \
+            -v ${{ github.workspace }}/trivy-reports:/reports \
             aquasecurity/trivy:latest image \
             --format sarif \
-            --output /workspace/backend-trivy-results.sarif \
+            # Виводимо файл у змонтовану директорію
+            --output /reports/backend-trivy-results.sarif \ 
             --severity CRITICAL,HIGH \
             ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
 
@@ -87,7 +89,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'backend-trivy-results.sarif'
+          sarif_file: 'trivy-reports/backend-trivy-results.sarif'
           category: 'backend-container'
 
       - name: Build Frontend image (local)
@@ -110,11 +112,12 @@ jobs:
 
       - name: Run Trivy scan - Frontend
         run: |
+          mkdir -p trivy-reports
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-            -v ${{ github.workspace }}:/workspace \
+            -v ${{ github.workspace }}/trivy-reports:/reports \
             aquasecurity/trivy:latest image \
             --format sarif \
-            --output /workspace/frontend-trivy-results.sarif \
+            --output /reports/frontend-trivy-results.sarif \
             --severity CRITICAL,HIGH \
             ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
 
@@ -122,7 +125,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'frontend-trivy-results.sarif'
+          sarif_file: 'trivy-reports/frontend-trivy-results.sarif'
           category: 'frontend-container'
 
   publish:
@@ -160,7 +163,7 @@ jobs:
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64 
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
