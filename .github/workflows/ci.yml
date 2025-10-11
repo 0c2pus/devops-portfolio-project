@@ -79,7 +79,7 @@ jobs:
             -v ${{ github.workspace }}:/workspace \
             aquasecurity/trivy:latest image \
             --format sarif \
-            --output backend-trivy-results.sarif \
+            --output /workspace/backend-trivy-results.sarif \
             --severity CRITICAL,HIGH \
             ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
 
@@ -114,7 +114,7 @@ jobs:
             -v ${{ github.workspace }}:/workspace \
             aquasecurity/trivy:latest image \
             --format sarif \
-            --output frontend-trivy-results.sarif \
+            --output /workspace/frontend-trivy-results.sarif \
             --severity CRITICAL,HIGH \
             ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
 
