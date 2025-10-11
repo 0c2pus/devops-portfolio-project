@@ -77,7 +77,7 @@ jobs:
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
             -v ${{ github.workspace }}:/workspace \
-            aquasecurity/trivy:0.33.0 image \
+            aquasecurity/trivy:latest image \
             --format sarif \
             --output backend-trivy-results.sarif \
             --severity CRITICAL,HIGH \
@@ -112,7 +112,7 @@ jobs:
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
             -v ${{ github.workspace }}:/workspace \
-            aquasecurity/trivy:0.33.0 image \
+            aquasecurity/trivy:latest image \
             --format sarif \
             --output frontend-trivy-results.sarif \
             --severity CRITICAL,HIGH \
