@@ -71,16 +71,13 @@ jobs:
           docker stop test-backend
           docker rm test-backend
 
-      - name: Run Trivy scan - Backend
-        run: |
-          mkdir -p trivy-reports 
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-            -v ${{ github.workspace }}/trivy-reports:/reports \
-            aquasecurity/trivy:latest image \
-            --format sarif \
-            --output /reports/backend-trivy-results.sarif \ 
-            --severity CRITICAL,HIGH \
-            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+      - name: Run Trivy scan - Backend (via Action)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.BACKEND_IMAGE }}:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-reports/backend-trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
 
       - name: Upload Backend Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
@@ -104,16 +101,13 @@ jobs:
           docker stop test-frontend
           docker rm test-frontend
 
-      - name: Run Trivy scan - Frontend
-        run: |
-          mkdir -p trivy-reports
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-            -v ${{ github.workspace }}/trivy-reports:/reports \
-            aquasecurity/trivy:latest image \
-            --format sarif \
-            --output /reports/frontend-trivy-results.sarif \
-            --severity CRITICAL,HIGH \
-            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+      - name: Run Trivy scan - Frontend (via Action)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.FRONTEND_IMAGE }}:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-reports/frontend-trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
 
       - name: Upload Frontend Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
