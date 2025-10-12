@@ -79,7 +79,7 @@ jobs:
             -p 8000:8000 \
             $TAG
           
-          sleep 10
+          sleep 15
           
           timeout 30 bash -c 'until curl -f http://localhost:8000/api/greeting; do echo "Waiting for backend..."; sleep 2; done'
           
@@ -142,7 +142,7 @@ jobs:
         run: |
           TAG=${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           docker run -d --name test-frontend \
-            -p 3000:80 \
+            -p 80:80 \
             $TAG
           
           sleep 10
