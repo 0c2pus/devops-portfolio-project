@@ -12,7 +12,7 @@
 This project demonstrates the full deployment cycle of a cloud-native application (Todo App) using a modern DevOps stack. The goal is to create a reliable, automated, and secure pipeline from code to production without relying on paid cloud services. This setup is perfect for local development and portfolio demonstration on a macOS environment.
 
 **Author:** Pavlo \
-**Contact:** [email](email) | [LinkedIn](linkedin) \
+**Contact:** [LinkedIn](linkedin) \
 **Live Demo:** http://localhost:30080 (Kubernetes) | http://your-vm-ip (VM deployment)
 
 ---
