@@ -1,32 +1,25 @@
-FROM node:20-bullseye-slim AS builder
+FROM node:20-alpine AS builder
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends build-essential python3 git && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache python3 make g++ git
 
 WORKDIR /app
+
 COPY package*.json ./
 
-RUN npm ci --omit=dev && \
-    npm rebuild sqlite3 --build-from-source && \
-    npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
 COPY . .
 
-FROM node:20-bullseye-slim
+FROM node:20-alpine
 
-ENV NODE_ENV=production
+USER node
 WORKDIR /app
 
-RUN mkdir -p /app && chown -R node:node /app
-USER node
-
-COPY --from=builder /app/node_modules ./node_modules
-COPY --chown=node:node . .
+COPY --from=builder /app /app
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node healthcheck.js || exit 1
-
 CMD ["node", "server.js"]
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:8000/api/greeting || exit 1
