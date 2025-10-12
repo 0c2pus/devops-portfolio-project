@@ -104,7 +104,7 @@ jobs:
           sarif_file: 'backend-trivy-results.sarif'
           category: 'backend-container'
           
-      - name: Publish Backend image (multi-platform)
+      - name: Publish Backend image (AMD64 only)
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         uses: docker/build-push-action@v5
         with:
@@ -113,7 +113,7 @@ jobs:
           load: false 
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           cache-from: type=gha,name=backend-cache
 
       - name: Extract Frontend metadata (Multi-tagging)
@@ -170,7 +170,7 @@ jobs:
           sarif_file: 'frontend-trivy-results.sarif'
           category: 'frontend-container'
 
-      - name: Publish Frontend image (multi-platform)
+      - name: Publish Frontend image (AMD64 only)
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         uses: docker/build-push-action@v5
         with:
@@ -179,19 +179,19 @@ jobs:
           load: false 
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           cache-from: type=gha,name=frontend-cache
 
       - name: Job Summary
         run: |
           echo "## Published Images" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Backend Images:" >> $GITHUB_STEP_SUMMARY
+          echo "### Backend Images (AMD64):" >> $GITHUB_STEP_SUMMARY
           echo '${{ steps.meta-backend.outputs.tags }}' | while read -r tag; do
             [[ -n "$tag" ]] && echo "- $tag" >> $GITHUB_STEP_SUMMARY
           done
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Frontend Images:" >> $GITHUB_STEP_SUMMARY
+          echo "### Frontend Images (AMD64):" >> $GITHUB_STEP_SUMMARY
           echo '${{ steps.meta-frontend.outputs.tags }}' | while read -r tag; do
             [[ -n "$tag" ]] && echo "- $tag" >> $GITHUB_STEP_SUMMARY
           done
