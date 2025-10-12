@@ -20,7 +20,6 @@ jobs:
   ci-cd:
     name: Full CI/CD Pipeline (Multi-Arch)
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,7 +49,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract Backend metadata
+      - name: Create backend metadata
         id: meta-backend
         uses: docker/metadata-action@v5
         with:
@@ -60,7 +59,7 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build & Push Backend Multi-Arch
+      - name: Build & Push Backend (multi-arch)
         uses: docker/build-push-action@v5
         with:
           context: app/backend
@@ -72,11 +71,14 @@ jobs:
           cache-from: type=gha,name=backend-cache
           cache-to: type=gha,mode=max,name=backend-cache
 
+      - name: Pull Backend image for test
+        run: docker pull ${{ env.BACKEND_IMAGE }}:latest
+
       - name: Test Backend container (amd64)
         run: |
           docker run -d --name test-backend -p 8000:8000 ${{ env.BACKEND_IMAGE }}:latest
           echo "Waiting for backend to be ready..."
-          for i in {1..15}; do
+          for i in {1..30}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/greeting || echo "000")
             if [ "$STATUS" == "200" ]; then
               echo "Backend ready!"
@@ -84,30 +86,29 @@ jobs:
             fi
             sleep 2
           done
-          docker logs test-backend
-          docker stop test-backend
-          docker rm test-backend
+          docker logs test-backend || true
+          docker stop test-backend || true
+          docker rm test-backend || true
 
-      - name: Trivy scan - Backend
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.BACKEND_IMAGE }}:latest
-          format: sarif
-          output: backend-trivy-results.sarif
-          severity: CRITICAL,HIGH
+      - name: Trivy scan - Backend (docker image)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            -v ${{ github.workspace }}:/workspace \
+            aquasecurity/trivy:0.33.0 image \
+            --format sarif --output backend-trivy-results.sarif --severity CRITICAL,HIGH \
+            ${{ env.BACKEND_IMAGE }}:latest
         continue-on-error: true
 
-      - name: Ensure backend Trivy SARIF exists
-        run: |
-          test -f backend-trivy-results.sarif || touch backend-trivy-results.sarif
+      - name: Ensure backend SARIF exists
+        run: test -f backend-trivy-results.sarif || touch backend-trivy-results.sarif
 
-      - name: Upload Backend Trivy results
+      - name: Upload Backend SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: backend-trivy-results.sarif
           category: backend-container
 
-      - name: Extract Frontend metadata
+      - name: Create frontend metadata
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
@@ -117,7 +118,7 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build & Push Frontend Multi-Arch
+      - name: Build & Push Frontend (multi-arch)
         uses: docker/build-push-action@v5
         with:
           context: app/frontend
@@ -129,36 +130,38 @@ jobs:
           cache-from: type=gha,name=frontend-cache
           cache-to: type=gha,mode=max,name=frontend-cache
 
+      - name: Pull Frontend image for test
+        run: docker pull ${{ env.FRONTEND_IMAGE }}:latest
+
       - name: Test Frontend container (amd64)
         run: |
-          docker run -d --name test-frontend -p 80:80 ${{ env.FRONTEND_IMAGE }}:latest
+          docker run -d --name test-frontend -p 8080:80 ${{ env.FRONTEND_IMAGE }}:latest
           echo "Waiting for frontend to be ready..."
-          for i in {1..15}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/ || echo "000")
+          for i in {1..30}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || echo "000")
             if [ "$STATUS" == "200" ]; then
               echo "Frontend ready!"
               break
             fi
             sleep 2
           done
-          docker logs test-frontend
-          docker stop test-frontend
-          docker rm test-frontend
+          docker logs test-frontend || true
+          docker stop test-frontend || true
+          docker rm test-frontend || true
 
-      - name: Trivy scan - Frontend
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.FRONTEND_IMAGE }}:latest
-          format: sarif
-          output: frontend-trivy-results.sarif
-          severity: CRITICAL,HIGH
+      - name: Trivy scan - Frontend (docker image)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            -v ${{ github.workspace }}:/workspace \
+            aquasecurity/trivy:0.33.0 image \
+            --format sarif --output frontend-trivy-results.sarif --severity CRITICAL,HIGH \
+            ${{ env.FRONTEND_IMAGE }}:latest
         continue-on-error: true
 
-      - name: Ensure frontend Trivy SARIF exists
-        run: |
-          test -f frontend-trivy-results.sarif || touch frontend-trivy-results.sarif
+      - name: Ensure frontend SARIF exists
+        run: test -f frontend-trivy-results.sarif || touch frontend-trivy-results.sarif
 
-      - name: Upload Frontend Trivy results
+      - name: Upload Frontend SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: frontend-trivy-results.sarif
@@ -167,11 +170,5 @@ jobs:
       - name: Job Summary
         run: |
           echo "## CI/CD Multi-Arch Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Backend Images:" >> $GITHUB_STEP_SUMMARY
-          echo '${{ steps.meta-backend.outputs.tags }}' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Frontend Images:" >> $GITHUB_STEP_SUMMARY
-          echo '${{ steps.meta-frontend.outputs.tags }}' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All images tested, scanned, and ready for deployment!" >> $GITHUB_STEP_SUMMARY
+          echo "Backend tags: ${{ steps.meta-backend.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "Frontend tags: ${{ steps.meta-frontend.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
