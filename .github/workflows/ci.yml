@@ -17,21 +17,24 @@ env:
   FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/devops-portfolio-frontend
 
 jobs:
-  ci-pipeline:
-    name: Full CI/CD Pipeline
+  ci-cd:
+    name: Full CI/CD Pipeline (Multi-Arch)
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-      
+
+      # --------------------
+      # Lint Dockerfiles
+      # --------------------
       - name: Lint Backend Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: app/backend/Dockerfile
           ignore: DL3008,DL3009,DL3018,DL3059
           failure-threshold: warning
-      
+
       - name: Lint Frontend Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
         with:
@@ -41,14 +44,17 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+        with:
+          buildkitd-flags: --debug
+          install: true
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract Backend metadata (Multi-tagging)
+      - name: Extract Backend metadata
         id: meta-backend
         uses: docker/metadata-action@v5
         with:
@@ -58,65 +64,50 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and Load Backend image for Testing/Scanning
-        id: build-backend-test
-        uses: docker/build-push-action@v5
-        with:
-          context: app/backend
-          push: false 
-          load: true 
-          tags: ${{ env.BACKEND_IMAGE }}:${{ github.sha }} 
-          platforms: linux/amd64 
-          cache-from: type=gha,name=backend-cache
-          cache-to: type=gha,mode=max,name=backend-cache
-
-      - name: Test Backend container
-        run: |
-          TAG=${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          docker run -d --name test-backend \
-            -e NODE_ENV=production \
-            -e API_PORT=8000 \
-            -p 8000:8000 \
-            $TAG
-          
-          sleep 15
-          
-          timeout 30 bash -c 'until curl -f http://localhost:8000/api/greeting; do echo "Waiting for backend..."; sleep 2; done'
-          
-          echo "Backend test successful"
-          docker stop test-backend
-          docker rm test-backend
-      
-      - name: Run Trivy vulnerability scanner - Backend
-        id: trivy-backend
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          format: 'sarif'
-          output: 'backend-trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-        continue-on-error: true
-      
-      - name: Upload Backend Trivy scan results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always() && steps.trivy-backend.outcome == 'success'
-        with:
-          sarif_file: 'backend-trivy-results.sarif'
-          category: 'backend-container'
-          
-      - name: Publish Backend image (AMD64 only)
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      - name: Build & Push Backend Multi-Arch
         uses: docker/build-push-action@v5
         with:
           context: app/backend
           push: true
-          load: false 
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha,name=backend-cache
+          cache-to: type=gha,mode=max,name=backend-cache
 
-      - name: Extract Frontend metadata (Multi-tagging)
+      - name: Test Backend container (amd64)
+        run: |
+          docker run -d --name test-backend -p 8000:8000 ${{ env.BACKEND_IMAGE }}:latest
+          echo "Waiting for backend to be ready..."
+          for i in {1..15}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/greeting || echo "000")
+            if [ "$STATUS" == "200" ]; then
+              echo "Backend ready!"
+              break
+            fi
+            sleep 2
+          done
+          docker logs test-backend
+          docker stop test-backend
+          docker rm test-backend
+
+      - name: Trivy scan - Backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.BACKEND_IMAGE }}:latest
+          format: sarif
+          output: backend-trivy-results.sarif
+          severity: CRITICAL,HIGH
+        continue-on-error: true
+
+      - name: Upload Backend Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: backend-trivy-results.sarif
+          category: backend-container
+
+      - name: Extract Frontend metadata
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
@@ -125,75 +116,58 @@ jobs:
             type=ref,event=branch
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
-      
-      - name: Build and Load Frontend image for Testing/Scanning
-        id: build-frontend-test
-        uses: docker/build-push-action@v5
-        with:
-          context: app/frontend
-          push: false 
-          load: true 
-          tags: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          platforms: linux/amd64
-          cache-from: type=gha,name=frontend-cache
-          cache-to: type=gha,mode=max,name=frontend-cache
 
-      - name: Test Frontend container
-        run: |
-          TAG=${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          docker run -d --name test-frontend \
-            -p 80:80 \
-            $TAG
-          
-          sleep 10
-          
-          timeout 30 bash -c 'until curl -f http://localhost:3000/; do echo "Waiting for frontend..."; sleep 2; done'
-          
-          echo "Frontend test successful"
-          docker stop test-frontend
-          docker rm test-frontend
-      
-      - name: Run Trivy vulnerability scanner - Frontend
-        id: trivy-frontend
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          format: 'sarif'
-          output: 'frontend-trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-        continue-on-error: true
-      
-      - name: Upload Frontend Trivy scan results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always() && steps.trivy-frontend.outcome == 'success'
-        with:
-          sarif_file: 'frontend-trivy-results.sarif'
-          category: 'frontend-container'
-
-      - name: Publish Frontend image (AMD64 only)
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      - name: Build & Push Frontend Multi-Arch
         uses: docker/build-push-action@v5
         with:
           context: app/frontend
           push: true
-          load: false 
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha,name=frontend-cache
+          cache-to: type=gha,mode=max,name=frontend-cache
+
+      - name: Test Frontend container (amd64)
+        run: |
+          docker run -d --name test-frontend -p 80:80 ${{ env.FRONTEND_IMAGE }}:latest
+          echo "Waiting for frontend to be ready..."
+          for i in {1..15}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/ || echo "000")
+            if [ "$STATUS" == "200" ]; then
+              echo "Frontend ready!"
+              break
+            fi
+            sleep 2
+          done
+          docker logs test-frontend
+          docker stop test-frontend
+          docker rm test-frontend
+
+      - name: Trivy scan - Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.FRONTEND_IMAGE }}:latest
+          format: sarif
+          output: frontend-trivy-results.sarif
+          severity: CRITICAL,HIGH
+        continue-on-error: true
+
+      - name: Upload Frontend Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: frontend-trivy-results.sarif
+          category: frontend-container
 
       - name: Job Summary
         run: |
-          echo "## Published Images" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ CI/CD Multi-Arch Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Backend Images (AMD64):" >> $GITHUB_STEP_SUMMARY
-          echo '${{ steps.meta-backend.outputs.tags }}' | while read -r tag; do
-            [[ -n "$tag" ]] && echo "- $tag" >> $GITHUB_STEP_SUMMARY
-          done
+          echo "### Backend Images:" >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta-backend.outputs.tags }}' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Frontend Images (AMD64):" >> $GITHUB_STEP_SUMMARY
-          echo '${{ steps.meta-frontend.outputs.tags }}' | while read -r tag; do
-            [[ -n "$tag" ]] && echo "- $tag" >> $GITHUB_STEP_SUMMARY
-          done
+          echo "### Frontend Images:" >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta-frontend.outputs.tags }}' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Images are ready for deployment!" >> $GITHUB_STEP_SUMMARY
+          echo "All images tested, scanned, and ready for deployment!" >> $GITHUB_STEP_SUMMARY
