@@ -15,10 +15,10 @@ env:
   REGISTRY: docker.io
   BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/devops-portfolio-backend
   FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/devops-portfolio-frontend
-  
+
 jobs:
-  lint-dockerfiles:
-    name: Lint Dockerfiles
+  ci-pipeline:
+    name: Full CI/CD Pipeline
     runs-on: ubuntu-latest
     
     steps:
@@ -39,15 +39,6 @@ jobs:
           ignore: DL3008,DL3009,DL3018,DL3059
           failure-threshold: warning
 
-  build-test-scan:
-    name: Build, Test, Scan, and Cache Artifacts
-    runs-on: ubuntu-latest
-    needs: lint-dockerfiles
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
@@ -57,13 +48,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract Backend metadata (SHA Tag)
-        id: meta-backend-sha
+      - name: Extract Backend metadata (Multi-tagging)
+        id: meta-backend
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.BACKEND_IMAGE }}
           tags: |
+            type=ref,event=branch
             type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and Load Backend image for Testing/Scanning
         id: build-backend-test
@@ -72,18 +65,19 @@ jobs:
           context: app/backend
           push: false 
           load: true 
-          tags: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          platforms: linux/amd64
+          tags: ${{ env.BACKEND_IMAGE }}:${{ github.sha }} 
+          platforms: linux/amd64 
           cache-from: type=gha,name=backend-cache
           cache-to: type=gha,mode=max,name=backend-cache
 
       - name: Test Backend container
         run: |
+          TAG=${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           docker run -d --name test-backend \
             -e NODE_ENV=production \
             -e API_PORT=8000 \
             -p 8000:8000 \
-            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+            $TAG
           
           sleep 10
           
@@ -109,7 +103,29 @@ jobs:
         with:
           sarif_file: 'backend-trivy-results.sarif'
           category: 'backend-container'
+          
+      - name: Publish Backend image (multi-platform)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+        uses: docker/build-push-action@v5
+        with:
+          context: app/backend
+          push: true
+          load: false 
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha,name=backend-cache
 
+      - name: Extract Frontend metadata (Multi-tagging)
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.FRONTEND_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
       - name: Build and Load Frontend image for Testing/Scanning
         id: build-frontend-test
         uses: docker/build-push-action@v5
@@ -124,9 +140,10 @@ jobs:
 
       - name: Test Frontend container
         run: |
+          TAG=${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           docker run -d --name test-frontend \
             -p 3000:80 \
-            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+            $TAG
           
           sleep 10
           
@@ -153,66 +170,17 @@ jobs:
           sarif_file: 'frontend-trivy-results.sarif'
           category: 'frontend-container'
 
-  publish:
-    name: Publish Images to Registry
-    runs-on: ubuntu-latest
-    needs: build-test-scan
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      - name: Extract Backend metadata (Multi-tagging)
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.BACKEND_IMAGE }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-      
-      - name: Build and push Backend image (multi-platform)
-        uses: docker/build-push-action@v5
-        with:
-          context: app/backend
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha,name=backend-cache
-          cache-to: type=gha,mode=max,name=backend-cache
-
-      - name: Extract Frontend metadata (Multi-tagging)
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.FRONTEND_IMAGE }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-      
-      - name: Build and push Frontend image (multi-platform)
+      - name: Publish Frontend image (multi-platform)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         uses: docker/build-push-action@v5
         with:
           context: app/frontend
           push: true
+          load: false 
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha,name=frontend-cache
-          cache-to: type=gha,mode=max,name=frontend-cache
 
       - name: Job Summary
         run: |
