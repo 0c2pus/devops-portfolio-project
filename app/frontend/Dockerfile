@@ -1,9 +1,6 @@
-FROM node:20-bullseye-slim AS builder
+FROM node:20-alpine AS builder
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    python3 \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
@@ -18,11 +15,15 @@ RUN npm run build
 
 FROM nginx:alpine AS production
 
-COPY --from=builder /app/dist /usr/share/nginx/html
-
 RUN apk add --no-cache tini && \
     sed -i 's/worker_processes  1;/worker_processes auto;/' /etc/nginx/nginx.conf && \
     sed -i 's/keepalive_timeout  65;/keepalive_timeout  15;/' /etc/nginx/nginx.conf
+
+COPY app/frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+COPY --from=builder /app/build /usr/share/nginx/html
+
+USER nginx
 
 EXPOSE 80
 
