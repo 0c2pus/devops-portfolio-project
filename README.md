@@ -1,32 +1,13 @@
-<table>
-  <tr>
-    <td width="160" valign="top">
-      <img src="docs/logo.jpg" alt="Project Logo" width="140"/>
-    </td>
-    <td valign="top">
-      <h1>GitOps & DevOps: From Code to Kubernetes on macOS</h1>
+| ![Logo](docs/logo.jpg) | 
+# GitOps & DevOps: From Code to Kubernetes on macOS  
 
-      <p>
-        <a href="https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml">
-          <img src="https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml/badge.svg" alt="CI Pipeline Status"/>
-        </a>
-        <a href="https://hub.docker.com/r/ocu2pu5/devops-portfolio-backend">
-          <img src="https://img.shields.io/docker/v/ocu2pu5/devops-portfolio-backend?label=backend&logo=docker" alt="Docker Backend"/>
-        </a>
-        <a href="https://hub.docker.com/r/ocu2pu5/devops-portfolio-frontend">
-          <img src="https://img.shields.io/docker/v/ocu2pu5/devops-portfolio-frontend?label=frontend&logo=docker" alt="Docker Frontend"/>
-        </a>
-        <a href="https://github.com/0c2pus/devops-portfolio-project/blob/main/LICENSE">
-          <img src="https://img.shields.io/github/license/0c2pus/devops-portfolio-project" alt="GitHub License"/>
-        </a>
-      </p>
+[![CI Pipeline Status](https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml/badge.svg)](https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml)  
+[![Docker Image Version (Backend)](https://img.shields.io/docker/v/ocu2pu5/devops-portfolio-backend?label=backend&logo=docker)](https://hub.docker.com/r/ocu2pu5/devops-portfolio-backend)  
+[![Docker Image Version (Frontend)](https://img.shields.io/docker/v/ocu2pu5/devops-portfolio-frontend?label=frontend&logo=docker)](https://hub.docker.com/r/ocu2pu5/devops-portfolio-frontend)  
+[![GitHub license](https://img.shields.io/github/license/0c2pus/devops-portfolio-project)](https://github.com/0c2pus/devops-portfolio-project/blob/main/LICENSE)  
 
-      <p>
-        <strong>Complete implementation of a DevOps pipeline for a web application using modern practices: CI/CD, Infrastructure as Code, Kubernetes, and GitOps, tailored for a local development environment.</strong>
-      </p>
-    </td>
-  </tr>
-</table>
+**Complete implementation of a DevOps pipeline for a web application using modern practices: CI/CD, Infrastructure as Code, Kubernetes, and GitOps, tailored for a local development environment.** |
+|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 ## Project overview
 
