@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.jpg" alt="Project Logo" width="140"/>
+</p>
+
 # GitOps & DevOps: From Code to Kubernetes on macOS
 
 [![CI Pipeline Status](https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml/badge.svg)](https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml)
