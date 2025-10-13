@@ -2,10 +2,10 @@
 
 # GitOps & DevOps: From Code to Kubernetes on macOS
 
-[![CI Pipeline Status](https://github.com/cicero-w/devops-portfolio-project/actions/workflows/ci.yml/badge.svg)](https://github.com/cicero-w/devops-portfolio-project/actions/workflows/ci.yml)
-[![Docker Image Version (Backend)](https://img.shields.io/docker/v/cicero2/devops-portfolio-backend?label=backend&logo=docker)](https://hub.docker.com/r/cicero2/devops-portfolio-backend)
-[![Docker Image Version (Frontend)](https://img.shields.io/docker/v/cicero2/devops-portfolio-frontend?label=frontend&logo=docker)](https://hub.docker.com/r/cicero2/devops-portfolio-frontend)
-[![GitHub license](https://img.shields.io/github/license/cicero-w/devops-portfolio-project)](https://github.com/cicero-w/devops-portfolio-project/blob/master/LICENSE)
+[![CI Pipeline Status](https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml/badge.svg)](https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml)
+[![Docker Image Version (Backend)](https://img.shields.io/docker/v/ocu2pu5/devops-portfolio-backend?label=backend&logo=docker)](https://hub.docker.com/r/ocu2pu5/devops-portfolio-backend)
+[![Docker Image Version (Frontend)](https://img.shields.io/docker/v/ocu2pu5/devops-portfolio-frontend?label=frontend&logo=docker)](https://hub.docker.com/r/ocu2pu5/devops-portfolio-frontend)
+[![GitHub license](https://img.shields.io/github/license/0c2pus/devops-portfolio-project)](https://github.com/0c2pus/devops-portfolio-project/blob/main/LICENSE)
 
 **Complete implementation of a DevOps pipeline for a web application using modern practices: CI/CD, Infrastructure as Code, Kubernetes, and GitOps, tailored for a local development environment.**
 
@@ -13,7 +13,7 @@
 
 This project demonstrates the full deployment cycle of a cloud-native application (Todo App) using a modern DevOps stack. The goal is to create a reliable, automated, and secure pipeline from code to production without relying on paid cloud services. This setup is perfect for local development and portfolio demonstration on a macOS environment.
 
-**Author:** 0c2pus \
+**Author:** [0c2pus](https://github.com/0c2pus) \
 **Contact:** [LinkedIn](linkedin) \
 **Live Demo:** http://localhost:30080 (Kubernetes) | http://your-vm-ip (VM deployment)
 
