@@ -11,7 +11,7 @@ volumes:
 
 services:
   backend:
-    image: ${DOCKERHUB_USERNAME:-cicero2}/devops-portfolio-backend:${IMAGE_TAG:-develop}
+    image: ${DOCKERHUB_USERNAME:-ocu2pu5}/devops-portfolio-backend:${IMAGE_TAG:-main}
     container_name: portfolio-backend
     restart: unless-stopped
     environment:
@@ -38,7 +38,7 @@ services:
       start_period: 40s
 
   frontend:
-    image: ${DOCKERHUB_USERNAME:-cicero2}/devops-portfolio-frontend:${IMAGE_TAG:-develop}
+    image: ${DOCKERHUB_USERNAME:-ocu2pu5}/devops-portfolio-frontend:${IMAGE_TAG:-main}
     container_name: portfolio-frontend
     restart: unless-stopped
     expose:
