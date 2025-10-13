@@ -1,4 +1,4 @@
-<img src="docs/logo.jpg" alt="Logo" width="120"/> | # GitOps & DevOps: From Code to Kubernetes on macOS<br>
+<img src="docs/logo.jpg" alt="Logo" width="120"/> | <h1>GitOps & DevOps: From Code to Kubernetes on macOS</h1><br>
 
 [![CI Pipeline Status](https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml/badge.svg)](https://github.com/0c2pus/devops-portfolio-project/actions/workflows/ci.yml)  
 [![Docker Image Version (Backend)](https://img.shields.io/docker/v/ocu2pu5/devops-portfolio-backend?label=backend&logo=docker)](https://hub.docker.com/r/ocu2pu5/devops-portfolio-backend)  
