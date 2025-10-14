@@ -1,14 +1,13 @@
 replicaCount: 2
-
 imagePullSecrets: []
 
 backend:
   image:
     repository: ocu2pu5/devops-portfolio-backend
-    tag: "develop"
+    tag: "main"
     pullPolicy: IfNotPresent
   port: 8000
-  replicas: 3
+  replicas: 2
   resources:
     requests:
       cpu: 200m
@@ -22,10 +21,10 @@ backend:
 frontend:
   image:
     repository: ocu2pu5/devops-portfolio-frontend
-    tag: "develop"
+    tag: "main"
     pullPolicy: IfNotPresent
-  containerPort: 3000
-  replicas: 3
+  containerPort: 80
+  replicas: 2
   resources:
     requests:
       cpu: 100m
@@ -75,8 +74,7 @@ ingress:
           pathType: Prefix
         - path: /api
           pathType: Prefix
-  tls: [] # [{hosts: ["portfolio.local"], secretName: "tls-secret"}]
+  tls: []
 
 nginxConfig: |-
-
 extraEnv: []
