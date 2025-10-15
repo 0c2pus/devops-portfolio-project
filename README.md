@@ -203,14 +203,6 @@ devops-portfolio-project/
 
 ### Local Development
 
-<details>
-<summary>Screenshots</summary>
-
-![Local Application Running](docs/images/stage-0/app-running.png)</br>
-_Todo application running locally with Node.js backend and React frontend_
-
-</details>
-
 ```bash
 # 1. Clone repository
 git clone https://github.com/0c2pus/devops-portfolio-project.git
@@ -230,14 +222,6 @@ npm run dev
 ```
 
 ### Docker Compose Deployment
-
-<details>
-<summary>Screenshots</summary>
-
-![Services  Running](docs/images/stage-1/app-running-docker.png)</br>
-_All services running with health checks in Docker Compose_
-
-</details>
 
 ```bash
 # Development environment
@@ -312,14 +296,6 @@ kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -
 ```
 
 #### 4. Deploy Application via ArgoCD
-
-<details>
-<summary>Screenshots</summary>
-
-![ArgoCD UI ](docs/images/stage-4/argocd-ui.png)</br>
-_ArgoCD UI showing portfolio-app with "Synced" and "Healthy" status, displaying all Kubernetes resources_
-
-</details>
 
 ```bash
 # Apply ArgoCD Application manifest
@@ -583,6 +559,86 @@ open http://localhost:9090  # Prometheus
 - Application health status
 - Container restart count
 - Node metrics
+
+---
+
+## Project Demonstrations
+
+### Stage 0: Local Development
+
+<details>
+<summary>View Screenshots</summary>
+
+![Local Application Running](docs/images/stage-0/app-running.png)
+*Todo application running locally with Node.js backend and React frontend*
+
+</details>
+
+---
+
+### Stage 1: Production Deployment on VM
+
+<details>
+<summary>View Screenshots</summary>
+
+![Full-stack Application Running](docs/images/stage-1/app-running.png)
+*Full-stack application deployed on Ubuntu VM with Docker containers*
+
+![Services Running](docs/images/stage-1/app-running-docker.png)
+*All services running with health checks in Docker Compose*
+
+</details>
+
+---
+
+### Stage 2: CI/CD Pipeline
+
+<details>
+<summary>View Screenshots</summary>
+
+![GitHub Actions Workflow](docs/images/stage-2/run-jobs.png)
+*GitHub Actions workflow run showing all jobs (Lint, Build/Test/Scan, Publish) with green checkmarks*
+
+![DockerHub Repositories](docs/images/stage-2/images.png)
+*DockerHub repositories showing published images with multiple tags (main, develop, SHA tags)*
+
+![GitHub Security](docs/images/stage-2/code-scanning.png)
+*GitHub Security tab displaying Trivy scan results with vulnerability reports for both containers*
+
+</details>
+
+---
+
+### Stage 3: Infrastructure as Code
+
+<details>
+<summary>View Screenshots</summary>
+
+![Ansible Playbook Success](docs/images/stage-3/ansible-playbook.png)
+*Ansible playbook execution showing successful completion with task summary and final verification*
+
+![Browser Verification](docs/images/stage-3/browser-verification.png)
+*Terminal showing one-command deployment followed by successful API test and browser verification*
+
+</details>
+
+---
+
+### Stage 4: Kubernetes and GitOps
+
+<details>
+<summary>View Screenshots</summary>
+
+![ArgoCD UI](docs/images/stage-4/argocd-ui.png)
+*ArgoCD UI showing portfolio-app with "Synced" and "Healthy" status, displaying all Kubernetes resources*
+
+![Kubernetes Running Pods](docs/images/stage-4/running-pods.png)
+*kubectl get pods output showing all running pods in portfolio namespace*
+
+![Grafana Dashboard](docs/images/stage-4/grafana-dashboard.png)
+*Grafana dashboard showing Kubernetes cluster metrics for portfolio namespace*
+
+</details>
 
 ---
 
